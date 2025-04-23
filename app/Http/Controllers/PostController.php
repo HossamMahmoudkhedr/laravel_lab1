@@ -11,7 +11,8 @@ class PostController extends Controller
      */
     public function index()
     {
-        return view('post.index');
+        $posts = Post::with('user')->paginate(10);
+        return view('posts.index', compact('posts'));
     }
 
     /**
@@ -19,7 +20,8 @@ class PostController extends Controller
      */
     public function create()
     {
-        return view('posts.create');
+        $users = \App\Models\User::all();
+        return view('posts.create', compact('users'));
     }
 
     /**
@@ -27,7 +29,13 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        return view('posts.store');
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'body' => 'required',
+            'enabled' => 'required|boolean',
+            'user_id' => 'required|exists:users,id',
+        ]);
+
     }
 
     /**
@@ -43,7 +51,9 @@ class PostController extends Controller
      */
     public function edit(string $id)
     {
-        return view('posts.edit', ['id'=>$id]);
+        $post = Post::findOrFail($id);
+        $users = \App\Models\User::all();
+        return view('posts.edit', compact('post', 'users'));
     }
 
     /**
@@ -51,7 +61,12 @@ class PostController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        return view('posts.update', ['id'=>$id]);
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'body' => 'required',
+            'enabled' => 'required|boolean',
+            'user_id' => 'required|exists:users,id',
+        ]);
     }
 
     /**
@@ -59,6 +74,9 @@ class PostController extends Controller
      */
     public function destroy(string $id)
     {
-        return view('posts.destroy');
+        $post = Post::findOrFail($id);
+        $post->delete();
+
+        return redirect()->route('post.index')->with('success', 'Post deleted successfully.');
     }
 }

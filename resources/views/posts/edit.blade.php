@@ -1,7 +1,12 @@
-@extends('layouts.main')
-
-@section('title', 'Edit Post')
+@extends('layouts.app')
 
 @section('content')
-    <h1>Show the form for editing the specified resource with id {{ $id }}.</h1>
+<div class="container">
+    <h2>Edit Post</h2>
+    <form action="{{ route('post.update', $post->id) }}" method="POST">
+        @method('PUT')
+        @include('posts.form')
+        <button type="submit" class="btn btn-success">Update</button>
+    </form>
+</div>
 @endsection

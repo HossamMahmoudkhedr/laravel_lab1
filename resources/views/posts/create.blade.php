@@ -1,7 +1,11 @@
-@extends('layouts.main')
-
-@section('title', 'Create Post')
+@extends('layouts.app')
 
 @section('content')
-    <h1>Show the form for creating a new resource.</h1>
+<div class="container">
+    <h2>Create Post</h2>
+    <form action="{{ route('post.store') }}" method="POST">
+        @include('posts.form')
+        <button type="submit" class="btn btn-primary">Create</button>
+    </form>
+</div>
 @endsection
