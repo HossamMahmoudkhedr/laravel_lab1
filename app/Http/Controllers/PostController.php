@@ -29,13 +29,21 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'title' => 'required|string|max:255',
             'body' => 'required',
             'enabled' => 'required|boolean',
             'user_id' => 'required|exists:users,id',
+            'content' => 'required|string',
         ]);
 
+        Post::create([
+            'title' => $request->title,
+            'content' => $request->content,
+            'user_id' => auth()->id(),
+        ]);
+
+        return redirect()->route('post.index')->with('success', 'Post created successfully!');
     }
 
     /**
@@ -52,8 +60,11 @@ class PostController extends Controller
     public function edit(string $id)
     {
         $post = Post::findOrFail($id);
-        $users = \App\Models\User::all();
-        return view('posts.edit', compact('post', 'users'));
+        if ($post->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        return view('post.edit', compact('post'));
     }
 
     /**
@@ -61,12 +72,26 @@ class PostController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        $post = Post::findOrFail($id);
+
+        if ($post->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $request->validate([
             'title' => 'required|string|max:255',
             'body' => 'required',
             'enabled' => 'required|boolean',
             'user_id' => 'required|exists:users,id',
+            'content' => 'required|string',
         ]);
+
+        $post->update([
+            'title' => $request->title,
+            'content' => $request->content,
+        ]);
+
+        return redirect()->route('post.index')->with('success', 'Post updated successfully!');
     }
 
     /**
