@@ -11,8 +11,9 @@ class PostController extends Controller
      */
     public function index()
     {
-        $posts = Post::with('user')->paginate(10);
-        return view('posts.index', compact('posts'));
+        // $posts = Post::with('user')->paginate(10);
+        // return view('posts.index', compact('posts'));
+        return Post::with('user')->get();
     }
 
     /**
@@ -29,21 +30,31 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'body' => 'required',
-            'enabled' => 'required|boolean',
-            'user_id' => 'required|exists:users,id',
-            'content' => 'required|string',
-        ]);
+        // $validated = $request->validate([
+        //     'title' => 'required|string|max:255',
+        //     'body' => 'required',
+        //     'enabled' => 'required|boolean',
+        //     'user_id' => 'required|exists:users,id',
+        //     'content' => 'required|string',
+        // ]);
 
-        Post::create([
+        // Post::create([
+        //     'title' => $request->title,
+        //     'content' => $request->content,
+        //     'user_id' => auth()->id(),
+        // ]);
+
+        // return redirect()->route('post.index')->with('success', 'Post created successfully!');
+
+        $request->validate(['title' => 'required', 'body' => 'required']);
+
+        $post = Post::create([
             'title' => $request->title,
-            'content' => $request->content,
-            'user_id' => auth()->id(),
+            'body' => $request->body,
+            'user_id' => Auth::id(),
         ]);
 
-        return redirect()->route('post.index')->with('success', 'Post created successfully!');
+        return response()->json($post, 201);
     }
 
     /**
@@ -51,7 +62,8 @@ class PostController extends Controller
      */
     public function show(string $id)
     {
-        return view('posts.show', ['id'=> $id]);
+        // return view('posts.show', ['id'=> $id]);
+        return Post::with('user')->findOrFail($id);
     }
 
     /**
@@ -72,26 +84,35 @@ class PostController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        // $post = Post::findOrFail($id);
+
+        // if ($post->user_id !== auth()->id()) {
+        //     abort(403, 'Unauthorized action.');
+        // }
+
+        // $request->validate([
+        //     'title' => 'required|string|max:255',
+        //     'body' => 'required',
+        //     'enabled' => 'required|boolean',
+        //     'user_id' => 'required|exists:users,id',
+        //     'content' => 'required|string',
+        // ]);
+
+        // $post->update([
+        //     'title' => $request->title,
+        //     'content' => $request->content,
+        // ]);
+
+        // return redirect()->route('post.index')->with('success', 'Post updated successfully!');
         $post = Post::findOrFail($id);
 
-        if ($post->user_id !== auth()->id()) {
-            abort(403, 'Unauthorized action.');
+        // Ensure only owner can update
+        if ($post->user_id !== Auth::id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'body' => 'required',
-            'enabled' => 'required|boolean',
-            'user_id' => 'required|exists:users,id',
-            'content' => 'required|string',
-        ]);
-
-        $post->update([
-            'title' => $request->title,
-            'content' => $request->content,
-        ]);
-
-        return redirect()->route('post.index')->with('success', 'Post updated successfully!');
+        $post->update($request->only(['title', 'body']));
+        return response()->json($post);
     }
 
     /**
@@ -99,9 +120,17 @@ class PostController extends Controller
      */
     public function destroy(string $id)
     {
-        $post = Post::findOrFail($id);
-        $post->delete();
+        // $post = Post::findOrFail($id);
+        // $post->delete();
 
-        return redirect()->route('post.index')->with('success', 'Post deleted successfully.');
+        // return redirect()->route('post.index')->with('success', 'Post deleted successfully.');
+        $post = Post::findOrFail($id);
+
+        if ($post->user_id !== Auth::id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $post->delete();
+        return response()->json(['message' => 'Post deleted']);
     }
 }
